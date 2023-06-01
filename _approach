@@ -1,0 +1,72 @@
+
+import os
+from transformers import pipeline
+
+# Define the pipeline for question answering
+question_answering_pipeline = pipeline("question-answering")
+
+# Create a list to store the uploaded files
+uploaded_files = []
+
+# Function to handle user commands
+def handle_user_command(command):
+    global uploaded_files
+
+    if command == "create agent":
+        uploaded_files = []
+        print("Agent created. Start uploading files.")
+    elif command == "upload file":
+        file_path = input("Enter the file path: ")
+        if os.path.isfile(file_path):
+            uploaded_files.append(file_path)
+            print("File uploaded successfully.")
+        else:
+            print("Invalid file path.")
+    elif command == "ask question":
+        if len(uploaded_files) == 0:
+            print("Please upload files before asking a question.")
+        else:
+            question = input("Enter your question: ")
+            answer = get_answer(question)
+            print("Agent's answer:", answer)
+    elif command == "exit":
+        print("Exiting the program.")
+        return False
+    else:
+        print("Invalid command.")
+   
+
+    return True
+
+# Function to get the answer based on the question and uploaded files
+def get_answer(question):
+    global uploaded_files
+
+    answer = None
+
+    for file_path in uploaded_files:
+        with open(file_path, "r") as file:
+            content = file.read()
+            result = question_answering_pipeline(question=question, context=content)
+            if result["score"] > 0.5:  # Adjust the score threshold as needed
+                answer = result["answer"]
+                break
+
+    if answer is None:
+        # Default generated answer
+        answer = "I'm sorry, I don't have the answer to that question."
+
+    return answer
+
+# Main program loop
+def main():
+    print("Welcome to the Agent Creation System!")
+    print("Available commands: create agent, upload file, ask question, exit")
+
+    while True:
+        command = input("Enter a command: ")
+        if not handle_user_command(command):
+            break
+
+if __name__ == "__main__":
+    main()
